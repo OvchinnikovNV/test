@@ -30,15 +30,18 @@ def run_process(path_file, interval):
 
         # Количество открытых файловых дескрипторов
         try:
-            stats['fds'].append(p.num_fds())
+            if platform == 'linux':
+                stats['fds'].append(p.num_fds())
+            else:
+                stats['fds'].append(p.num_handles())
         except psutil.Error as error:
             stats['fds'].append(-1)
             print(error)
 
-        if interval < interval_limit:
+        if interval <= interval_limit:
             time.sleep(interval - ((time.time() - start_time) % interval))
         else:
-            for i in range(int(interval // interval_limit) - 1):
+            for i in range(int(interval // interval_limit)):
                 if p.is_running() and p.status() != psutil.STATUS_ZOMBIE:
                     time.sleep(interval_limit)
                 else:
@@ -47,14 +50,10 @@ def run_process(path_file, interval):
     pandas.DataFrame(stats).to_csv('stats.csv', index=False)
 
 
-# +++ 1: Записать на диск
-# +++ 2: Ограничить сверху и снизу значение interval
-# +++  : Будем проверять в слипе
-# 3: Обрабатывать все ошибки!
-# 4: Реализовать для Windows
-# +++ 5: Программа виснет, если interval большой, а процесс уже закончился
 if __name__ == "__main__":
-    print(platform)
+    if platform != 'win32' and platform != 'linux':
+        print('Only for Windows or Linux systems.')
+        exit()
 
     argParser = argparse.ArgumentParser()
     argParser.add_argument('-p', '--path')
