@@ -26,7 +26,6 @@ def plot_stats():
 def run_process(path_file, interval, time_limit=None):
     stats = {'timestamp': [], 'cpu': [], 'rss': [], 'vms': [], 'fds': []}
     interval_limit = 3  # При interval > interval_limit каждые interval_limit секунд будет проверяться is_running()
-    # interval = float(interval)
 
     start_time = time.time()
     process = subprocess.Popen(['python3', path_file], close_fds=True)
@@ -43,7 +42,7 @@ def run_process(path_file, interval, time_limit=None):
         stats['timestamp'].append(tmp_time)
 
         # Загрузка CPU в процентах
-        stats['cpu'].append(p.cpu_percent() / psutil.cpu_count())
+        stats['cpu'].append(p.cpu_percent(0.1) / psutil.cpu_count())
 
         # Потребление памяти в MiB: Resident Set Size и Virtual Memory Size
         stats['rss'].append(p.memory_info().rss / 1024 / 1024)
@@ -55,9 +54,10 @@ def run_process(path_file, interval, time_limit=None):
                 stats['fds'].append(p.num_fds())
             else:
                 stats['fds'].append(p.num_handles())
-        except psutil.Error as error:
-            stats['fds'].append(-1)
-            print(error)
+        except psutil.Error:
+            for key, value in stats.items():
+                if key != 'fds':
+                    value.pop()
 
         if interval <= interval_limit:
             time.sleep(interval - ((time.time() - start_time) % interval))
@@ -85,8 +85,8 @@ if __name__ == "__main__":
                            help='Maximum execution time of transferred file in seconds')
     args = argParser.parse_args()
 
-    if args.path is None or args.interval is None:
-        argParser.print_help()
+    if args.interval <= 0:
+        print('Interval must be positive!')
         sys.exit()
 
     run_process(args.path, args.interval, args.time_limit)
