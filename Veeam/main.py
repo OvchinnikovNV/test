@@ -28,7 +28,7 @@ def run_process(path_file, interval, time_limit=None):
     interval_limit = 3  # При interval > interval_limit каждые interval_limit секунд будет проверяться is_running()
 
     start_time = time.time()
-    process = subprocess.Popen(['python', path_file], close_fds=True)
+    process = subprocess.Popen(['python3', path_file], close_fds=True)
     p = psutil.Process(pid=process.pid)
 
     while p.is_running() and p.status() != psutil.STATUS_ZOMBIE:
