@@ -3,20 +3,41 @@ import time
 import psutil
 import argparse
 import pandas
-from sys import platform
+import sys
 
 
-def run_process(path_file, interval):
+def plot_stats():
+    import matplotlib.pyplot as plt
+
+    stats = pandas.read_csv('stats.csv')
+
+    plt.figure(1)
+    plt.title('Stats')
+    plt.plot(stats['timestamp'], stats['cpu'], label='CPU, %')
+    plt.plot(stats['timestamp'], stats['rss'], label='RSS, MiB')
+    plt.plot(stats['timestamp'], stats['vms'], label='VMS, MiB')
+    plt.plot(stats['timestamp'], stats['fds'], label='FDS')
+    plt.legend()
+    plt.xlabel('Time, sec')
+    plt.grid(alpha=0.3)
+    plt.savefig('stats.png', dpi=600)
+
+
+def run_process(path_file, interval, time_limit=None):
     stats = {'timestamp': [], 'cpu': [], 'rss': [], 'vms': [], 'fds': []}
-    interval_limit = 3
-    interval = float(interval)
+    interval_limit = 3  # При interval > interval_limit каждые interval_limit секунд будет проверяться is_running()
+    # interval = float(interval)
 
     start_time = time.time()
-    process = subprocess.Popen(['python', path_file], close_fds=True)
+    process = subprocess.Popen(['python3', path_file], close_fds=True)
     p = psutil.Process(pid=process.pid)
 
     while p.is_running() and p.status() != psutil.STATUS_ZOMBIE:
         tmp_time = round(time.time() - start_time, 2)
+        if time_limit and tmp_time > time_limit:
+            print('Exceeded maximum execution time process.')
+            p.kill()
+            break
 
         # Время с начала процесса
         stats['timestamp'].append(tmp_time)
@@ -24,13 +45,13 @@ def run_process(path_file, interval):
         # Загрузка CPU в процентах
         stats['cpu'].append(p.cpu_percent() / psutil.cpu_count())
 
-        # Потребление памяти: Resident Set Size и Virtual Memory Size
+        # Потребление памяти в MiB: Resident Set Size и Virtual Memory Size
         stats['rss'].append(p.memory_info().rss / 1024 / 1024)
         stats['vms'].append(p.memory_info().vms / 1024 / 1024)
 
         # Количество открытых файловых дескрипторов
         try:
-            if platform == 'linux':
+            if sys.platform == 'linux':
                 stats['fds'].append(p.num_fds())
             else:
                 stats['fds'].append(p.num_handles())
@@ -51,13 +72,22 @@ def run_process(path_file, interval):
 
 
 if __name__ == "__main__":
-    if platform != 'win32' and platform != 'linux':
+    if sys.platform != 'win32' and sys.platform != 'linux':
         print('Only for Windows or Linux systems.')
-        exit()
+        sys.exit()
 
     argParser = argparse.ArgumentParser()
-    argParser.add_argument('-p', '--path')
-    argParser.add_argument('-i', '--interval')
+    argParser.add_argument('-p', '--path', required=True,
+                           help='Path to executable python file (REQUIRED)')
+    argParser.add_argument('-i', '--interval', required=True, type=float,
+                           help='Statistics collection interval in seconds (REQUIRED)')
+    argParser.add_argument('-t', '--time-limit', type=float,
+                           help='Maximum execution time of transferred file in seconds')
     args = argParser.parse_args()
 
-    run_process(args.path, args.interval)
+    if args.path is None or args.interval is None:
+        argParser.print_help()
+        sys.exit()
+
+    run_process(args.path, args.interval, args.time_limit)
+    plot_stats()

@@ -1,7 +1,12 @@
-value = 0
-for i in range(100000000):
-    value += 1
-    value *= 100
-    value -= 100
+import time
+import random
+
+array = []
+counter = 100000
+
+for i in range(int(counter)):
+    array.append(time.time())
+    if i > counter / 2:
+        array.sort()
 
 print('Process is end.')
