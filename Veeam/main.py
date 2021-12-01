@@ -28,7 +28,7 @@ def run_process(path_file, interval, time_limit=None):
     interval_limit = 3  # При interval > interval_limit каждые interval_limit секунд будет проверяться is_running()
 
     start_time = time.time()
-    process = subprocess.Popen(['python3', path_file], close_fds=True)
+    process = subprocess.Popen(['python', path_file], close_fds=True)
     p = psutil.Process(pid=process.pid)
 
     while p.is_running() and p.status() != psutil.STATUS_ZOMBIE:
@@ -38,25 +38,25 @@ def run_process(path_file, interval, time_limit=None):
             p.kill()
             break
 
-        # Время с начала процесса
-        stats['timestamp'].append(tmp_time)
-
-        # Загрузка CPU в процентах
-        stats['cpu'].append(p.cpu_percent(0.1) / psutil.cpu_count())
-
-        # Потребление памяти в MiB: Resident Set Size и Virtual Memory Size
-        stats['rss'].append(p.memory_info().rss / 1024 / 1024)
-        stats['vms'].append(p.memory_info().vms / 1024 / 1024)
-
-        # Количество открытых файловых дескрипторов
         try:
+            # Время с начала процесса
+            stats['timestamp'].append(tmp_time)
+
+            # Загрузка CPU в процентах
+            stats['cpu'].append(p.cpu_percent(0.1) / psutil.cpu_count())
+
+            # Потребление памяти в MiB: Resident Set Size и Virtual Memory Size
+            stats['rss'].append(p.memory_info().rss / 1024 / 1024)
+            stats['vms'].append(p.memory_info().vms / 1024 / 1024)
+
+            # Количество открытых файловых дескрипторов
             if sys.platform == 'linux':
                 stats['fds'].append(p.num_fds())
             else:
                 stats['fds'].append(p.num_handles())
         except psutil.Error:
-            for key, value in stats.items():
-                if key != 'fds':
+            for value in stats.values():
+                if len(value) > len(stats['fds']):
                     value.pop()
 
         if interval <= interval_limit:
