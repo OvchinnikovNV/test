@@ -18,8 +18,8 @@ for i in range(len(busy) + 1):
         b = busy[i]
         tmp = b['start'].split(':')
         tmp = timedelta(hours=int(tmp[0]), minutes=int(tmp[1]))
-    
-    for i in range((tmp - begin) // gap):
+
+    for j in range((tmp - begin) // gap):
         gaps.append({'start': str(begin)[:-3], 'stop': str(begin + gap)[:-3]})
         begin += gap
     
@@ -42,9 +42,6 @@ Output:
 {'start': '12:50', 'stop': '13:20'}
 {'start': '13:20', 'stop': '13:50'}
 {'start': '13:50', 'stop': '14:20'}
-{'start': '14:20', 'stop': '14:50'}
-{'start': '14:50', 'stop': '15:20'}
-{'start': '15:20', 'stop': '15:50'}
 {'start': '15:50', 'stop': '16:20'}
 {'start': '17:20', 'stop': '17:50'}
 {'start': '17:50', 'stop': '18:20'}
