@@ -30,22 +30,3 @@ for i in range(len(busy) + 1):
 for i in gaps:
     print(i)
 
-'''
-Output:
-{'start': '9:00', 'stop': '9:30'}
-{'start': '9:30', 'stop': '10:00'}
-{'start': '10:00', 'stop': '10:30'}
-{'start': '10:50', 'stop': '11:20'}
-{'start': '11:20', 'stop': '11:50'}
-{'start': '11:50', 'stop': '12:20'}
-{'start': '12:20', 'stop': '12:50'}
-{'start': '12:50', 'stop': '13:20'}
-{'start': '13:20', 'stop': '13:50'}
-{'start': '13:50', 'stop': '14:20'}
-{'start': '15:50', 'stop': '16:20'}
-{'start': '17:20', 'stop': '17:50'}
-{'start': '17:50', 'stop': '18:20'}
-{'start': '18:50', 'stop': '19:20'}
-{'start': '19:20', 'stop': '19:50'}
-{'start': '20:20', 'stop': '20:50'}
-'''
